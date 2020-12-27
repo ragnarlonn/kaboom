@@ -101,7 +101,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, jsonStr)
+		fmt.Fprintf(w, string(jsonStr))
 		fmt.Printf("Writing:\n%s\n", jsonStr)
 	}
 }
