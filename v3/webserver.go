@@ -212,6 +212,9 @@ const html1 = `
 				font-size: 16px;
 				font-weight: bold;
 			}
+			.exec > * {
+				margin: 10px;
+			}
 			button:hover {
 				opacity: 0.8;
 			}
@@ -242,6 +245,13 @@ const html2 = `
 
 const html3 = `
 		</table>
+		<div>
+			<div class="exec" style="display:flex; flex-direction: row; align-items: center;">
+				Sequence:
+				<input type="text" id="exec"></input>
+				<button id="execbutton" onclick="execSequence(event);">Execute</button>
+			</div>
+		</div>
 		<button onclick="testFire(event);">Fire all channels</button>
 		<button id="toggle12vminus" onclick="toggle12vminus(event);">-12V is <b>OFF</b></button>
 		<button onclick="reset(event);">Reset system state</button>
@@ -249,8 +259,11 @@ const html3 = `
 			async function testFire(e) {
 				for (var chan = 1; chan <= 8; chan++) {
 					_fire(chan);
-					await new Promise(r => setTimeout(r, 500));
+					await sleep(500);
 				}
+			}
+			function sleep(ms) {
+				return new Promise(resolve => setTimeout(resolve, ms));
 			}
 			function _fire(chan) {
 				document.getElementById("firing" + chan).style.backgroundColor = "orange";
@@ -281,14 +294,33 @@ const html3 = `
 				var chan = e.currentTarget.id.substring(6);
 				_fire(chan);
 			}
+			async function execSequence(e) {
+				var sequence = document.getElementById("exec").value;
+				var arr = sequence.split(",");
+				for (var i = 0; i < arr.length; i++) {
+					cmd = arr[i];
+					if (cmd[0].toLowerCase() == "f") {
+						_fire(parseInt(cmd.substr(1)));
+					} else if (cmd[0].toLowerCase() == "s") {
+						var ms = parseInt(cmd.substr(1));
+						await sleep(ms);
+					}
+				}
+			}
 			function toggle12vminus(e) {
 				var xhr = new XMLHttpRequest();
 				xhr.onreadystatechange = function() {
 					if (this.readyState == XMLHttpRequest.DONE) {
 						if (this.status == 200) {
 							state = JSON.parse(this.responseText);
-							document.getElementById("toggle12vminus").innerHTML = "-12V is <b>" +
-								(state.minus12venabled ? "ON" : "OFF") + "</b>";
+							var elem = document.getElementById("toggle12vminus");
+							if (state.minus12venabled) {
+								elem.innerHTML = "-12V is <b>ON</b>";
+								elem.style.backgroundImage = "linear-gradient(to bottom, rgba(120,255,120), rgba(40,255,40))";
+							} else{
+								elem.innerHTML = "-12V is <b>OFF</b>";
+								elem.style.backgroundImage = "linear-gradient(to bottom, rgba(255,120,120), rgba(255,40,40))";
+							}
 						}
 					}
 				};
